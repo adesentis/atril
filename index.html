@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0f12">
+<title>Atril Cámara</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Atril Cámara: estudio de bolsillo. Biblioteca de guiones → toma → cámara frontal con el texto pegado al lente. */
+:root{
+  color-scheme: dark;
+  --bg:#0c0f12; --panel:#151a1f; --panel-2:#1c232a; --line:#2a333c;
+  --fg:#edf1f4; --dim:#8b97a3; --faint:#5d6873;
+  --tally:#f2b33d; --cue:#69c3cf; --rec:#ef5b4c;
+  --f-ui:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--f-ui);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--tally);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:800;font-size:28px;display:flex;align-items:center;gap:10px}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--rec);box-shadow:0 0 0 4px rgba(239,91,76,.18)}
+.sub{color:var(--dim);font-size:14px}
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;min-height:42px}
+.btn.primary{background:var(--tally);border-color:var(--tally);color:#1b1406}
+.btn.rec{background:var(--rec);border-color:var(--rec);color:#fff}
+.btn.ghost{background:transparent}
+.btn.small{min-height:34px;padding:5px 11px;font-size:14px}
+.btn.danger{color:var(--rec)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;width:100%}
+.card h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:19px}
+.meta{color:var(--dim);font-size:13px;font-family:var(--f-num)}
+.pill{font-size:11px;font-family:var(--f-num);color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin-left:6px}
+.note{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--dim);font-size:14px}
+.note strong{color:var(--fg)}
+.grp{display:flex;flex-direction:column;gap:8px}
+.grp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:6px}
+.grp-h h2{margin:0;font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.toma{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toma .t{flex:1 1 200px;min-width:0}
+.toma .t b{display:block}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
+input[type=text],textarea{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:15px/1.5 var(--f-ui);width:100%}
+textarea{min-height:50vh;font-family:var(--f-num);font-size:13.5px}
+details.tips{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details.tips summary{cursor:pointer;font-weight:700}
+details.tips ol{margin:10px 0 0;padding-left:20px;color:var(--dim);display:grid;gap:6px}
+details.tips li b{color:var(--fg)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-weight:700;z-index:60;max-width:90vw;text-align:center}
+
+/* ---------- Estudio ---------- */
+#studio{position:fixed;inset:0;background:#000;z-index:20;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#cam.selfie{transform:scaleX(-1)}
+#panel{position:absolute;overflow:hidden;background:rgba(0,0,0,.62)}
+#panel.top{left:0;right:0;top:0;height:46%}
+#panel.left{left:0;top:0;bottom:0;width:46%}
+#panel.right{right:0;top:0;bottom:0;width:46%}
+#panel.full{inset:0;background:rgba(0,0,0,.86)}
+#scroll{position:absolute;left:0;right:0;top:0;will-change:transform}
+#text{margin:0 auto;padding:0 max(14px,env(safe-area-inset-left,0px));color:#f6f7f8;line-height:1.36;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+#text p{margin:0 0 1em}
+#text .ph{display:block;margin:0 0 .26em}
+#text .cue{display:block;font-size:.42em;letter-spacing:.14em;text-transform:uppercase;color:#7d8893;margin:1.5em 0 .7em;font-weight:700}
+#text .clip{display:block;font-size:.5em;line-height:1.35;color:var(--cue);border:1px solid rgba(105,195,207,.5);border-radius:.5em;padding:.5em .7em;margin:.4em 0 1.2em}
+#text .clip::before{content:"NO SE LEE · ";font-weight:700}
+#text .fin{display:block;text-align:center;color:#7d8893;font-size:.5em;margin-top:2em}
+#gaze{position:absolute;left:0;right:0;height:0;pointer-events:none}
+#gaze::before,#gaze::after{content:"";position:absolute;top:-8px;border:8px solid transparent}
+#gaze::before{left:3px;border-left-color:var(--tally)}
+#gaze::after{right:3px;border-right-color:var(--tally)}
+#hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;font-family:var(--f-num);font-size:13px;background:rgba(0,0,0,.55);border-radius:999px;padding:4px 12px;pointer-events:none;z-index:3}
+#hud .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)}
+#hud.rec .dot{background:var(--rec);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+#bar{position:absolute;left:0;right:0;bottom:0;padding:10px max(10px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.78) 35%);display:flex;flex-direction:column;gap:10px;align-items:center;z-index:4}
+#bar .main{display:flex;align-items:center;justify-content:center;gap:22px}
+#bar .opts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;transition:opacity .25s}
+#studio.recording #bar .opts{opacity:0;pointer-events:none}
+.cbtn{background:rgba(28,35,42,.85);border:1px solid var(--line);border-radius:10px;min-height:38px;padding:0 10px;font-weight:700;font-size:14px}
+.cbtn.on{color:var(--tally)}
+.grp2{display:flex;align-items:center;gap:2px;background:rgba(28,35,42,.85);border:1px solid var(--line);border-radius:10px}
+.grp2 button{background:transparent;border:0;min-width:36px;min-height:38px;font-weight:700}
+.grp2 span{font-family:var(--f-num);font-size:12.5px;min-width:54px;text-align:center;color:var(--dim)}
+#bRec{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:transparent;display:grid;place-items:center;padding:0}
+#bRec span{width:54px;height:54px;border-radius:50%;background:var(--rec);transition:all .2s}
+#studio.recording #bRec span{width:28px;height:28px;border-radius:6px}
+.round{width:52px;height:52px;border-radius:50%;background:rgba(28,35,42,.85);border:1px solid var(--line);font-weight:700}
+#count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:30vmin;color:var(--tally);pointer-events:none;z-index:5;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+#camMsg{position:absolute;left:16px;right:16px;bottom:180px;z-index:4}
+
+/* ---------- Revisión del video ---------- */
+#review{position:fixed;inset:0;background:var(--bg);z-index:30;display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:12px}
+#review video{flex:1;min-height:0;width:100%;background:#000;border-radius:12px}
+#review .row{justify-content:center}
+@media (prefers-reduced-motion:reduce){#hud.rec .dot{animation:none}.opts,#bRec span{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div>
+      <div class="brand"><i></i>Atril Cámara</div>
+      <div class="sub">Lee y grábate en el mismo celular. Los videos se quedan en tu teléfono.</div>
+    </div>
+    <div class="row" id="topActions"></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div id="studio" hidden>
+  <video id="cam" playsinline muted autoplay class="selfie"></video>
+  <div id="panel" class="top"><div id="scroll"><div id="text"></div></div><div id="gaze"></div></div>
+  <div id="hud"><span class="dot"></span><span id="clock">0:00</span><span id="hudInfo"></span></div>
+  <div id="count" hidden></div>
+  <div id="camMsg" hidden></div>
+  <div id="bar">
+    <div class="opts">
+      <div class="grp2" title="Velocidad"><button id="bSlow" aria-label="Más lento">−</button><span id="sWpm">140 ppm</span><button id="bFast" aria-label="Más rápido">+</button></div>
+      <div class="grp2" title="Tamaño de letra"><button id="bSmall" aria-label="Letra más chica">A−</button><span id="sSize">34 px</span><button id="bBig" aria-label="Letra más grande">A+</button></div>
+      <button class="cbtn" id="bPanel">Texto: arriba</button>
+      <button class="cbtn" id="bWidth">Columna</button>
+      <button class="cbtn" id="bPhr">Frases</button>
+      <button class="cbtn" id="bClip">Pausa en clips</button>
+      <button class="cbtn" id="bFlip">Cámara: frontal</button>
+      <button class="cbtn" id="bRestart">⟲ Inicio</button>
+    </div>
+    <div class="main">
+      <button class="round" id="bExit" aria-label="Salir">✕</button>
+      <button id="bRec" aria-label="Grabar"><span></span></button>
+      <button class="round" id="bPlay" aria-label="Ensayar sin grabar">▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="review" hidden>
+  <div class="row" style="justify-content:space-between"><b id="rvTitle">Toma grabada</b><span class="meta" id="rvMeta"></span></div>
+  <video id="rvVideo" controls playsinline></video>
+  <div class="row">
+    <a class="btn primary" id="rvSave" download>Guardar en el celular</a>
+    <button class="btn" id="rvShare">Compartir…</button>
+  </div>
+  <div class="row">
+    <button class="btn rec" id="rvAgain">● Grabar otra vez</button>
+    <button class="btn ghost" id="rvBack">Volver a las tomas</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, fn] of Object.entries(v)) e.addEventListener(ev, fn); else if (k === 'class') e.className = v; else if (v !== false && v != null) e.setAttribute(k, v); } for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k)); return e; };
+  const ls = { get(k, d) { try { const v = localStorage.getItem('atrilcam.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('atrilcam.' + k, JSON.stringify(v)); } catch {} } };
+  function toast(m, ms = 2000) { const t = el('div', { class: 'toast', role: 'status' }, m); document.body.append(t); setTimeout(() => t.remove(), ms); }
+
+  // ---------- Ajustes ----------
+  const DEF = { wpm: 140, size: 34, width: 0, panel: 'top', phrases: true, pauseClips: true, facing: 'user' };
+  const WIDTHS = [{ k: 'estrecha', ch: 17 }, { k: 'media', ch: 24 }, { k: 'ancha', ch: 34 }];
+  const PANELS = [{ v: 'top', k: 'arriba' }, { v: 'left', k: 'izquierda' }, { v: 'right', k: 'derecha' }, { v: 'full', k: 'pantalla' }];
+  const S = Object.assign({}, DEF, ls.get('ajustes', {}));
+  const saveS = () => ls.set('ajustes', S);
+
+  // ---------- Formato del guion (igual que Atril) ----------
+  function parse(texto) {
+    const grupos = []; let g = null, t = null, para = [], clip = null;
+    const ensureT = () => { if (!g) { g = { titulo: 'Guion', tomas: [] }; grupos.push(g); } if (!t) { t = { titulo: g.titulo, bloques: [] }; g.tomas.push(t); } };
+    const flush = () => { if (para.length) { ensureT(); t.bloques.push({ tipo: 'p', texto: para.join(' ') }); para = []; } };
+    for (const raw of String(texto || '').replace(/\r/g, '').split('\n')) {
+      const l = raw.trim();
+      if (clip !== null) { clip += ' ' + l; if (l.endsWith(']')) { ensureT(); t.bloques.push({ tipo: 'clip', texto: clip.slice(1, -1).trim() }); clip = null; } continue; }
+      if (!l) { flush(); continue; }
+      if (/^>|^---+$|^#\s/.test(l)) { flush(); continue; }
+      let m;
+      if ((m = l.match(/^##\s+(.*)/)) && !l.startsWith('###')) { flush(); g = { titulo: m[1], tomas: [] }; grupos.push(g); t = null; continue; }
+      if ((m = l.match(/^###\s+(.*)/)) && !l.startsWith('####')) { flush(); if (!g) { g = { titulo: 'Guion', tomas: [] }; grupos.push(g); } t = { titulo: m[1], bloques: [] }; g.tomas.push(t); continue; }
+      if ((m = l.match(/^####\s+(.*)/))) { flush(); ensureT(); t.bloques.push({ tipo: 'cue', texto: m[1] }); continue; }
+      if (l.startsWith('[')) { flush(); if (l.endsWith(']')) { ensureT(); t.bloques.push({ tipo: 'clip', texto: l.slice(1, -1) }); } else clip = l; continue; }
+      para.push(l);
+    }
+    flush();
+    for (const gr of grupos) gr.tomas = gr.tomas.filter(x => x.bloques.some(b => b.tipo === 'p'));
+    return grupos.filter(gr => gr.tomas.length);
+  }
+  const words = s => (s.match(/\S+/g) || []).length;
+  const tomaWords = t => t.bloques.reduce((n, b) => n + (b.tipo === 'p' ? words(b.texto) : 0), 0);
+  const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const slug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 40);
+
+  // ---------- Guiones: los del repositorio + los que pegues en este celular ----------
+  let delRepo = [], propios = ls.get('guiones', []), listo = false;
+  async function cargarRepo() {
+    try {
+      const idx = await (await fetch('guiones/indice.json', { cache: 'no-cache' })).json();
+      delRepo = (await Promise.all(idx.map(async f => { try { const g = await (await fetch('guiones/' + f, { cache: 'no-cache' })).json(); return { ...g, id: 'repo:' + f, repo: true }; } catch { return null; } }))).filter(Boolean);
+    } catch { delRepo = []; }
+    listo = true; render();
+  }
+  const todos = () => [...propios.slice().sort((a, b) => (b.actualizado || '').localeCompare(a.actualizado || '')), ...delRepo];
+  function guardarPropio(g) { g.actualizado = new Date().toISOString(); propios = propios.filter(x => x.id !== g.id); propios.push(g); ls.set('guiones', propios); }
+  function borrarPropio(id) { propios = propios.filter(x => x.id !== id); ls.set('guiones', propios); }
+
+  // ---------- Vistas ----------
+  let ruta = { v: 'lista' };
+  const go = r => { ruta = r; render(); scrollTo(0, 0); };
+  function tips() {
+    return el('details', { class: 'tips' }, el('summary', {}, 'Para que no se note que lees'),
+      el('ol', {},
+        el('li', {}, el('b', {}, 'El texto va pegado al lente. '), 'La cámara frontal está arriba: deja el texto “arriba” y mira la línea ámbar. En horizontal, elige el lado donde queda la cámara.'),
+        el('li', {}, el('b', {}, 'Celular a la altura de los ojos y a un brazo o más. '), 'Mientras más lejos, menos se nota el movimiento de los ojos. Usa un tripié o recárgalo en algo.'),
+        el('li', {}, el('b', {}, 'Columna estrecha y “Frases”. '), 'Pocas palabras por renglón: lees bloques sin barrer la línea.'),
+        el('li', {}, el('b', {}, 'Ritmo de plática: 130 a 150 ppm. '), 'Haz un ensayo con ▶ antes de grabar.'),
+        el('li', {}, el('b', {}, 'Cuando el texto se detiene en un clip, '), 'la grabación sigue: haz una pausa natural y toca el texto para continuar. En CapCut cortas ahí y metes el testimonio.')));
+  }
+  function render() {
+    const v = $('#view'), top = $('#topActions'); v.replaceChildren(); top.replaceChildren();
+    if (!listo) { v.append(el('p', { class: 'sub' }, 'Cargando guiones…')); return; }
+    if (ruta.v === 'lista') return vLista(v, top);
+    if (ruta.v === 'guion') return vGuion(v, top);
+    if (ruta.v === 'editar') return vEditar(v, top);
+  }
+  function vLista(v, top) {
+    top.append(el('button', { class: 'btn primary', on: { click: () => go({ v: 'editar', id: null }) } }, '+ Pegar guion'));
+    const list = el('div', { class: 'list' });
+    for (const g of todos()) {
+      const ts = parse(g.texto).flatMap(x => x.tomas), w = ts.reduce((n, t) => n + tomaWords(t), 0);
+      list.append(el('button', { class: 'card', on: { click: () => go({ v: 'guion', id: g.id }) } },
+        el('div', {}, el('h3', {}, g.titulo || 'Sin título', el('span', { class: 'pill' }, g.repo ? 'cargado' : 'en este celular')), el('div', { class: 'meta' }, `${ts.length} tomas · ${w.toLocaleString('es-MX')} palabras`)), el('span', { 'aria-hidden': 'true' }, '›')));
+    }
+    if (!todos().length) v.append(el('div', { class: 'note' }, el('strong', {}, 'Aún no hay guiones. '), 'Toca “Pegar guion”. Usa ## para un bloque, ### para cada toma y #### para etiquetas que no se leen.'));
+    v.append(list, tips());
+  }
+  function vGuion(v, top) {
+    const g = todos().find(x => x.id === ruta.id); if (!g) return go({ v: 'lista' });
+    top.append(el('button', { class: 'btn ghost', on: { click: () => go({ v: 'lista' }) } }, '‹ Guiones'));
+    if (!g.repo) top.append(el('button', { class: 'btn', on: { click: () => go({ v: 'editar', id: g.id }) } }, 'Editar'));
+    v.append(el('div', {}, el('h1', { style: 'margin:0;font-family:var(--f-display);font-size:24px;line-height:1.2;text-wrap:balance' }, g.titulo), el('div', { class: 'meta' }, `Tiempos a ${S.wpm} palabras por minuto`)));
+    for (const gr of parse(g.texto)) {
+      const box = el('section', { class: 'grp' }), wT = gr.tomas.reduce((n, t) => n + tomaWords(t), 0);
+      box.append(el('div', { class: 'grp-h' }, el('h2', {}, gr.titulo), gr.tomas.length > 1 ? el('button', { class: 'btn small', on: { click: () => estudio(gr.tomas, gr.titulo) } }, `● Todo el bloque · ${fmt(wT / S.wpm * 60)}`) : null));
+      for (const t of gr.tomas) {
+        const w = tomaWords(t);
+        box.append(el('div', { class: 'toma' }, el('div', { class: 't' }, el('b', {}, t.titulo), el('span', { class: 'meta' }, `${w} palabras · ≈ ${fmt(w / S.wpm * 60)}`)),
+          el('button', { class: 'btn small rec', on: { click: () => estudio([t], t.titulo) } }, '● Grabar')));
+      }
+      v.append(box);
+    }
+    v.append(tips());
+  }
+  function vEditar(v, top) {
+    const g = ruta.id ? propios.find(x => x.id === ruta.id) : null;
+    top.append(el('button', { class: 'btn ghost', on: { click: () => go(g ? { v: 'guion', id: g.id } : { v: 'lista' }) } }, 'Cancelar'));
+    const fT = el('input', { type: 'text', id: 'fTitulo', value: g?.titulo || '', placeholder: 'Ej. Video del OTO' });
+    const fX = el('textarea', { id: 'fTexto', placeholder: '## TOMAS\n### Toma 1\n#### Apertura\nTu texto…\n[CLIP: testimonio]' }, g?.texto || '');
+    const prev = el('div', { class: 'meta', 'aria-live': 'polite' });
+    const upd = () => { const ts = parse(fX.value).flatMap(x => x.tomas); prev.textContent = `${ts.length} tomas · ${ts.reduce((n, t) => n + tomaWords(t), 0)} palabras para leer`; };
+    fX.addEventListener('input', upd); upd();
+    const acc = el('div', { class: 'row' }, el('button', { class: 'btn primary', on: { click: () => {
+      if (!fX.value.trim()) return toast('El guion está vacío');
+      const id = g?.id || ('p-' + Date.now().toString(36));
+      guardarPropio({ id, titulo: fT.value.trim() || 'Sin título', texto: fX.value }); toast('Guardado en este celular'); go({ v: 'guion', id });
+    } } }, 'Guardar'));
+    if (g) { const b = el('button', { class: 'btn ghost danger', on: { click: () => b.replaceWith(el('span', { class: 'row' }, '¿Borrar?', el('button', { class: 'btn small danger', on: { click: () => { borrarPropio(g.id); go({ v: 'lista' }); } } }, 'Sí, borrar'), el('button', { class: 'btn small', on: { click: render } }, 'No'))) } }, 'Borrar'); acc.append(b); }
+    v.append(el('label', { class: 'f', for: 'fTitulo' }, 'Título', fT), el('label', { class: 'f', for: 'fTexto' }, 'Texto', fX), prev,
+      el('div', { class: 'note' }, el('strong', {}, 'Se guarda solo en este celular. '), 'Formato: ## bloque · ### toma · #### etiqueta que no se lee · [CLIP…] indicación donde el texto se detiene.'), acc);
+  }
+
+  // ---------- Estudio: cámara + texto ----------
+  const P = { root: $('#studio'), cam: $('#cam'), panel: $('#panel'), scroll: $('#scroll'), text: $('#text'), gaze: $('#gaze') };
+  let actuales = [], tituloActual = '', stream = null, recorder = null, chunks = [], recStart = 0, recTimer = 0, videoURL = null, videoBlob = null;
+  let playing = false, pos = 0, maxPos = 0, pxPerWord = 1, last = 0, raf = 0, wordsTotal = 0, pauses = [], countT = 0, wake = null, enEstudio = false;
+  const LINE = 0.16;
+
+  function construir() {
+    const t = P.text; t.replaceChildren(); wordsTotal = 0;
+    actuales.forEach(tm => {
+      if (actuales.length > 1) t.append(el('span', { class: 'cue', style: 'color:var(--tally)' }, tm.titulo));
+      for (const b of tm.bloques) {
+        if (b.tipo === 'cue') { t.append(el('span', { class: 'cue' }, b.texto)); continue; }
+        if (b.tipo === 'clip') { t.append(el('span', { class: 'clip', 'data-pause': /^clip\b/i.test(b.texto) ? '1' : null }, b.texto)); continue; }
+        wordsTotal += words(b.texto);
+        if (S.phrases) { const p = el('p'); for (const f of b.texto.split(/(?<=[,.;:?!…»])\s+/)) p.append(el('span', { class: 'ph' }, f)); t.append(p); }
+        else t.append(el('p', {}, b.texto));
+      }
+    });
+    t.append(el('span', { class: 'fin' }, '— fin —'));
+    estilo();
+  }
+  function estilo() {
+    P.panel.className = S.panel;
+    const H = P.panel.clientHeight;
+    P.text.style.fontSize = S.size + 'px';
+    P.text.style.maxWidth = `min(100%, ${WIDTHS[S.width].ch * S.size * 0.56}px)`;
+    P.text.style.paddingTop = Math.round(H * LINE) + 'px';
+    P.text.style.paddingBottom = Math.round(H * 0.8) + 'px';
+    P.gaze.style.top = Math.round(H * LINE + S.size * 0.68) + 'px';
+    const padTop = H * LINE, total = P.text.scrollHeight;
+    pxPerWord = Math.max(1, total - padTop - H * 0.8) / Math.max(1, wordsTotal);
+    maxPos = Math.max(0, total - H * 0.8 - S.size);
+    pauses = [...P.text.querySelectorAll('[data-pause]')].map(e => ({ y: e.offsetTop - padTop, done: e.offsetTop - padTop < pos - 1 }));
+    pos = Math.min(pos, maxPos); pintar();
+    $('#sWpm').textContent = S.wpm + ' ppm'; $('#sSize').textContent = S.size + ' px';
+    $('#bPanel').textContent = 'Texto: ' + PANELS.find(p => p.v === S.panel).k;
+    $('#bWidth').textContent = 'Columna ' + WIDTHS[S.width].k;
+    $('#bPhr').classList.toggle('on', S.phrases); $('#bClip').classList.toggle('on', S.pauseClips);
+    $('#bFlip').textContent = 'Cámara: ' + (S.facing === 'user' ? 'frontal' : 'trasera');
+    P.cam.classList.toggle('selfie', S.facing === 'user');
+  }
+  function pintar() {
+    P.scroll.style.transform = `translate3d(0,${-pos}px,0)`;
+    const resta = maxPos ? ((maxPos - pos) / pxPerWord) / S.wpm * 60 : 0;
+    $('#hudInfo').textContent = 'texto −' + fmt(resta);
+  }
+  function tick(ts) {
+    if (!playing) return;
+    const dt = Math.min(0.1, (ts - last) / 1000); last = ts;
+    pos += (S.wpm / 60) * pxPerWord * dt;
+    if (S.pauseClips) { const p = pauses.find(q => !q.done && pos >= q.y); if (p) { p.done = true; pos = p.y; pintar(); pararTexto(); toast('Clip: haz una pausa y toca el texto para seguir', 2600); return; } }
+    if (pos >= maxPos) { pos = maxPos; pintar(); pararTexto(); return; }
+    pintar(); raf = requestAnimationFrame(tick);
+  }
+  function correrTexto() { if (playing) return; playing = true; last = performance.now(); $('#bPlay').textContent = '❚❚'; raf = requestAnimationFrame(tick); }
+  function pararTexto() { playing = false; cancelAnimationFrame(raf); $('#bPlay').textContent = '▶'; }
+  function cuenta(fn) {
+    if (countT) return; let n = 3; const c = $('#count'); c.hidden = false; c.textContent = n;
+    countT = setInterval(() => { n--; if (n > 0) c.textContent = n; else { clearInterval(countT); countT = 0; c.hidden = true; fn(); } }, 800);
+  }
+
+  async function abrirCamara() {
+    cerrarCamara();
+    const msg = $('#camMsg'); msg.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) { msg.hidden = false; msg.replaceChildren(el('div', { class: 'note' }, el('strong', {}, 'Este navegador no deja usar la cámara. '), 'Abre Atril Cámara en Chrome.')); return false; }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: S.facing, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      P.cam.srcObject = stream; await P.cam.play().catch(() => {});
+      return true;
+    } catch (e) {
+      msg.hidden = false;
+      msg.replaceChildren(el('div', { class: 'note' }, el('strong', {}, 'No se pudo abrir la cámara. '),
+        e?.name === 'NotAllowedError' ? 'Diste “No permitir”. Toca el candado junto a la dirección → Permisos → Cámara y Micrófono → Permitir, y vuelve a entrar.' : 'Cierra otras apps que usen la cámara y vuelve a intentar.'));
+      return false;
+    }
+  }
+  function cerrarCamara() { stream?.getTracks().forEach(t => t.stop()); stream = null; P.cam.srcObject = null; }
+
+  function tipoVideo() {
+    const ops = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    return ops.find(t => window.MediaRecorder?.isTypeSupported?.(t)) || '';
+  }
+  function grabar() {
+    if (recorder) return detener();
+    if (!stream) return toast('Primero permite la cámara');
+    if (!window.MediaRecorder) return toast('Este navegador no puede grabar. Usa Chrome.');
+    cuenta(() => {
+      chunks = []; const mime = tipoVideo();
+      try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 160_000 } : undefined); }
+      catch { recorder = new MediaRecorder(stream); }
+      recorder.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
+      recorder.onstop = terminado;
+      recorder.start(1000);
+      recStart = performance.now(); P.root.classList.add('recording'); $('#hud').classList.add('rec'); $('#bRec').setAttribute('aria-label', 'Detener');
+      recTimer = setInterval(() => $('#clock').textContent = fmt((performance.now() - recStart) / 1000), 250);
+      correrTexto();
+    });
+  }
+  function detener() { pararTexto(); try { recorder?.stop(); } catch {} }
+  function terminado() {
+    clearInterval(recTimer); const dur = (performance.now() - recStart) / 1000;
+    P.root.classList.remove('recording'); $('#hud').classList.remove('rec'); $('#bRec').setAttribute('aria-label', 'Grabar');
+    const type = recorder?.mimeType || chunks[0]?.type || 'video/webm'; recorder = null;
+    videoBlob = new Blob(chunks, { type }); chunks = [];
+    if (videoURL) URL.revokeObjectURL(videoURL); videoURL = URL.createObjectURL(videoBlob);
+    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
+    const nombre = `atril-${slug(tituloActual) || 'toma'}-${stamp}.${ext}`;
+    $('#rvVideo').src = videoURL; $('#rvSave').href = videoURL; $('#rvSave').download = nombre;
+    $('#rvTitle').textContent = tituloActual; $('#rvMeta').textContent = `${fmt(dur)} · ${(videoBlob.size / 1048576).toFixed(1)} MB · ${ext.toUpperCase()}`;
+    $('#rvShare').hidden = !(navigator.canShare && navigator.canShare({ files: [new File([videoBlob], nombre, { type })] }));
+    $('#rvShare').onclick = async () => { try { await navigator.share({ files: [new File([videoBlob], nombre, { type })], title: tituloActual }); } catch {} };
+    cerrarCamara(); P.root.hidden = true; $('#review').hidden = false;
+  }
+
+  async function estudio(tomas, titulo) {
+    actuales = tomas; tituloActual = titulo; enEstudio = true;
+    $('#review').hidden = true; P.root.hidden = false; document.body.style.overflow = 'hidden';
+    pos = 0; $('#clock').textContent = '0:00'; construir();
+    try { await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }); } catch {}
+    try { wake = await navigator.wakeLock?.request('screen'); } catch {}
+    await abrirCamara(); requestAnimationFrame(estilo);
+  }
+  function salir() {
+    if (recorder) { detener(); return; }
+    pararTexto(); cerrarCamara(); enEstudio = false; P.root.hidden = true; document.body.style.overflow = '';
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
+    try { wake?.release(); } catch {} wake = null; render();
+  }
+  function cambiar(k, v) { S[k] = v; saveS(); const rel = maxPos ? pos / maxPos : 0; if (k === 'phrases') construir(); else estilo(); pos = rel * maxPos; pintar(); }
+
+  const on = (id, fn) => $(id).addEventListener('click', e => { e.stopPropagation(); fn(); });
+  on('#bRec', grabar); on('#bExit', salir);
+  on('#bPlay', () => playing ? pararTexto() : (pos < 2 ? cuenta(correrTexto) : correrTexto()));
+  on('#bSlow', () => cambiar('wpm', Math.max(80, S.wpm - 5))); on('#bFast', () => cambiar('wpm', Math.min(240, S.wpm + 5)));
+  on('#bSmall', () => cambiar('size', Math.max(18, S.size - 3))); on('#bBig', () => cambiar('size', Math.min(96, S.size + 3)));
+  on('#bPanel', () => cambiar('panel', PANELS[(PANELS.findIndex(p => p.v === S.panel) + 1) % PANELS.length].v));
+  on('#bWidth', () => cambiar('width', (S.width + 1) % WIDTHS.length));
+  on('#bPhr', () => cambiar('phrases', !S.phrases)); on('#bClip', () => cambiar('pauseClips', !S.pauseClips));
+  on('#bFlip', async () => { if (recorder) return toast('Detén la grabación para cambiar de cámara'); S.facing = S.facing === 'user' ? 'environment' : 'user'; saveS(); estilo(); await abrirCamara(); });
+  on('#bRestart', () => { if (recorder) return; pararTexto(); pos = 0; pauses.forEach(p => p.done = false); pintar(); });
+  $('#bar').addEventListener('pointerdown', e => e.stopPropagation());
+
+  // Toque en el texto = pausar/seguir el texto (la grabación no se detiene); arrastre = mover el texto
+  let drag = null;
+  P.panel.addEventListener('pointerdown', e => { drag = { y: e.clientY, p: pos, moved: false }; P.panel.setPointerCapture(e.pointerId); });
+  P.panel.addEventListener('pointermove', e => { if (!drag) return; const dy = e.clientY - drag.y; if (Math.abs(dy) > 8) drag.moved = true; if (drag.moved) { pos = Math.max(0, Math.min(maxPos, drag.p - dy)); pauses.forEach(p => p.done = p.y < pos - 1); pintar(); } });
+  P.panel.addEventListener('pointerup', () => { if (drag && !drag.moved) (playing ? pararTexto() : correrTexto()); drag = null; });
+  addEventListener('resize', () => { if (enEstudio) { const rel = maxPos ? pos / maxPos : 0; estilo(); pos = rel * maxPos; pintar(); } });
+  document.addEventListener('keydown', e => {
+    if (!enEstudio) return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); playing ? pararTexto() : correrTexto(); }
+    else if (e.key === 'ArrowUp') cambiar('wpm', Math.min(240, S.wpm + 5));
+    else if (e.key === 'ArrowDown') cambiar('wpm', Math.max(80, S.wpm - 5));
+    else if (e.key === 'Escape') salir();
+  });
+  document.addEventListener('visibilitychange', async () => { if (enEstudio && document.visibilityState === 'visible') { try { wake = await navigator.wakeLock?.request('screen'); } catch {} } });
+
+  on('#rvAgain', () => { $('#review').hidden = true; estudio(actuales, tituloActual); });
+  on('#rvBack', () => { $('#review').hidden = true; enEstudio = false; document.body.style.overflow = ''; try { if (document.fullscreenElement) document.exitFullscreen(); } catch {} render(); });
+  $('#rvSave').addEventListener('click', () => toast('Se guarda en Descargas. Desde ahí lo abres en CapCut o Google Fotos.', 3200));
+
+  render(); cargarRepo();
+})();
+</script>
+</body>
+</html>
